@@ -2,23 +2,28 @@ package io.group.flink.cep;
 
 import io.group.flink.cep.source.Event;
 import io.group.flink.cep.source.EventSource;
+import io.group.flink.cep.source.EventType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.cep.CEP;
+import org.apache.flink.cep.PatternSelectFunction;
 import org.apache.flink.cep.PatternStream;
-import org.apache.flink.cep.functions.PatternProcessFunction;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.cep.pattern.conditions.SimpleCondition;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.util.Collector;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.util.OutputTag;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 
 /**
+ * CEP 默认使用 {@link PatternStream#inEventTime()} 时间，需要我们指定水位线。
+ *
  * @author Li.Wei by 2022/4/11
  */
 @Slf4j
@@ -27,42 +32,99 @@ public class EventCep {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment
             .createLocalEnvironmentWithWebUI(new Configuration());
-        final DataStreamSource<Event> streamSource = env.addSource(new EventSource());
-        final WatermarkStrategy<Event> watermarkStrategy = WatermarkStrategy
-            .<Event>forBoundedOutOfOrderness(Duration.ofSeconds(1))
-            .withIdleness(Duration.ofSeconds(10))
-            .withTimestampAssigner((event, timestamp) -> event.getSecond());
-        streamSource.assignTimestampsAndWatermarks(watermarkStrategy);
 
-        // 在3秒 内重复登录了三次, 则产生告警
-        Pattern<Event, Event> pattern = Pattern.<Event>begin("start")
-            .where(new SimpleCondition<Event>() {
-                @Override
-                public boolean filter(Event event) throws Exception {
-                    System.out.println("first: " + event);
-                    return true;
-                }
-            });
-        //.within(Time.seconds(10));
-        // 根据用户id分组，以便可以锁定用户IP，cep模式匹配
-        PatternStream<Event> patternStream = CEP.pattern(streamSource, pattern);
+        final KeyedStream<Event, String> source = env.addSource(new EventSource())
+            .assignTimestampsAndWatermarks(WatermarkStrategy
+                .<Event>forBoundedOutOfOrderness(Duration.ofSeconds(10))
+                .withIdleness(Duration.ofSeconds(10))
+                .withTimestampAssigner((event, timestamp) -> event.getSecond())
+            ).name("事件流")
+            .keyBy((KeySelector<Event, String>) event1 -> event1.getUserId());
 
-        patternStream
-            .process(new PatternProcessFunction<Event, Event>() {
-                @Override
-                public void processMatch(Map<String, List<Event>> match, Context ctx, Collector<Event> out) throws Exception {
-                    for (List<Event> value : match.values()) {
-                        for (Event event : value) {
-                            System.out.println(event);
-                            out.collect(event);
-                        }
-                    }
-                }
-            })
-            .print()
-            .setParallelism(1);
+
+        registerPattern1(source);
+        registerPattern2(source);
+        registerPattern3(source);
 
         env.execute(EventCep.class.getSimpleName());
     }
 
+    private static void registerPattern1(DataStream<Event> dataStream) {
+        final String patternName = "p1";
+        Pattern<Event, ?> pattern = Pattern.<Event>begin(patternName + "_LOGIN")
+            .where(new SimpleCondition<Event>() {
+                @Override
+                public boolean filter(Event event) throws Exception {
+                    return EventType.LOGIN.equals(event.getEvent());
+                }
+            })
+            .next(patternName + "_LOGOUT")
+            .where(new SimpleCondition<Event>() {
+                @Override
+                public boolean filter(Event event) throws Exception {
+                    return EventType.LOGOUT.equals(event.getEvent());
+                }
+            })
+            .within(Time.seconds(5));
+        final SingleOutputStreamOperator<String> streamOperator = CEP
+            .pattern(dataStream, pattern)
+            .inProcessingTime()
+            .select((PatternSelectFunction<Event, String>) Object::toString);
+        streamOperator.print();
+        streamOperator
+            .getSideOutput(new OutputTag<String>(patternName + "_late") {
+            })
+            .map(x -> patternName + "_out: " + x);
+
+    }
+
+
+    private static void registerPattern2(DataStream<Event> dataStream) {
+        final String patternName = "p2";
+        Pattern<Event, ?> pattern2 = Pattern.<Event>begin(patternName + "_LOGIN")
+            .where(new SimpleCondition<Event>() {
+                @Override
+                public boolean filter(Event event) throws Exception {
+                    return EventType.LOGIN.equals(event.getEvent());
+                }
+            })
+            .next(patternName + "_CLICK")
+            .where(new SimpleCondition<Event>() {
+                @Override
+                public boolean filter(Event event) throws Exception {
+                    return EventType.CLICK.equals(event.getEvent());
+                }
+            })
+            .within(Time.seconds(10));
+        final SingleOutputStreamOperator<String> streamOperator = CEP
+            .pattern(dataStream, pattern2)
+            .inProcessingTime()
+            .select((PatternSelectFunction<Event, String>) Object::toString);
+        streamOperator.print();
+        streamOperator
+            .getSideOutput(new OutputTag<String>(patternName + "_late") {
+            })
+            .map(x -> patternName + "_out: " + x);
+    }
+
+    private static void registerPattern3(DataStream<Event> dataStream) {
+        final String patternName = "p3";
+        Pattern<Event, ?> pattern2 = Pattern.<Event>begin(patternName + "_PAY")
+            .where(new SimpleCondition<Event>() {
+                @Override
+                public boolean filter(Event event) throws Exception {
+                    return EventType.PAY.equals(event.getEvent());
+                }
+            })
+            .within(Time.seconds(10));
+        final SingleOutputStreamOperator<String> streamOperator = CEP
+            .pattern(dataStream, pattern2)
+            .inProcessingTime()
+            .select((PatternSelectFunction<Event, String>) Object::toString);
+        streamOperator.print();
+        streamOperator
+            .getSideOutput(new OutputTag<String>(patternName + "_late") {
+            })
+            .map(x -> patternName + "_out: " + x);
+    }
 }

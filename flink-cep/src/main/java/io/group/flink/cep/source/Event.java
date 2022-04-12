@@ -11,14 +11,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Event {
-    private long second = System.currentTimeMillis();
+    private long second;
     private String userId;
     private String ip;
-    private String type;
+    private EventType event;
 
-    public Event(String userId, String ip, String type) {
+    public Event(String userId, String ip, EventType event) {
         this.userId = userId;
         this.ip = ip;
-        this.type = type;
+        this.event = event;
+    }
+
+    public Event time(long second) {
+        this.second = second;
+        return this;
     }
 }
