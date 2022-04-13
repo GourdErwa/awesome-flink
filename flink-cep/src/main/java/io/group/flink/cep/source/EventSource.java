@@ -8,6 +8,8 @@ import java.util.List;
 import static io.group.flink.cep.source.EventType.*;
 
 /**
+ * 循环发射预设好的事件，发射时设置事件时间
+ *
  * @author Li.Wei by 2022/4/12
  */
 public class EventSource implements SourceFunction<Event> {

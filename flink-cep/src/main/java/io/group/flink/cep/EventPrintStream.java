@@ -12,6 +12,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import java.time.Duration;
 
 /**
+ * 直接打印数据源，以测试程序可执行性
+ *
  * @author Li.Wei by 2022/4/11
  */
 @Slf4j

@@ -43,10 +43,23 @@ public class EventCep {
 
 
         registerPattern1(source);
-        registerPattern2(source);
-        registerPattern3(source);
+        //registerPattern2(source);
+        //registerPattern3(source);
 
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    Thread.sleep(10000L);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                System.out.println("load registerPattern3...");
+//                registerPattern3(source);
+//            }
+//        }).start();
         env.execute(EventCep.class.getSimpleName());
+
     }
 
     private static void registerPattern1(DataStream<Event> dataStream) {
@@ -66,16 +79,21 @@ public class EventCep {
                 }
             })
             .within(Time.seconds(5));
+
+        final OutputTag<Event> sideOutputTag = new OutputTag<Event>(patternName + "_late") {
+        };
+
         final SingleOutputStreamOperator<String> streamOperator = CEP
             .pattern(dataStream, pattern)
             .inProcessingTime()
+            .sideOutputLateData(sideOutputTag) // 使用处理时间不会有迟到事件
             .select((PatternSelectFunction<Event, String>) Object::toString);
-        streamOperator.print();
-        streamOperator
-            .getSideOutput(new OutputTag<String>(patternName + "_late") {
-            })
-            .map(x -> patternName + "_out: " + x);
+        //streamOperator.print().name(patternName + "_sink");
 
+        streamOperator
+            .getSideOutput(sideOutputTag)
+            .map(x -> patternName + "_out: " + x)
+            .print();
     }
 
 
@@ -100,11 +118,12 @@ public class EventCep {
             .pattern(dataStream, pattern2)
             .inProcessingTime()
             .select((PatternSelectFunction<Event, String>) Object::toString);
-        streamOperator.print();
+        streamOperator.print().name(patternName + "_sink");
         streamOperator
             .getSideOutput(new OutputTag<String>(patternName + "_late") {
             })
-            .map(x -> patternName + "_out: " + x);
+            .map(x -> patternName + "_out: " + x)
+            .print();
     }
 
     private static void registerPattern3(DataStream<Event> dataStream) {
@@ -121,10 +140,11 @@ public class EventCep {
             .pattern(dataStream, pattern2)
             .inProcessingTime()
             .select((PatternSelectFunction<Event, String>) Object::toString);
-        streamOperator.print();
+        streamOperator.print().name(patternName + "_sink");
         streamOperator
             .getSideOutput(new OutputTag<String>(patternName + "_late") {
             })
-            .map(x -> patternName + "_out: " + x);
+            .map(x -> patternName + "_out: " + x)
+            .print();
     }
 }
