@@ -2,6 +2,8 @@ package io.group.flink.stream.cdc.mysql;
 
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
+import io.group.flink.stream.sink.ChangelogSink;
+import io.group.flink.stream.sink.iceberg.IcebergCdcSink;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
@@ -42,7 +44,10 @@ public class MysqlCDC2ChangeLog {
         final DataStreamSource<Tuple3<String, RowKind, String>> source
             = env.fromSource(mySqlSource, WatermarkStrategy.noWatermarks(), "MySQL Source");
 
+        // sink table
         new ChangelogSink().compute(source, tableEnv);
+        // sink iceberg table
+        // new IcebergCdcSink().compute(source, tableEnv);
 
         env.execute("MySQL CDC + Changelog");
     }

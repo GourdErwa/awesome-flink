@@ -1,4 +1,4 @@
-package io.group.flink.stream.cdc.mysql;
+package io.group.flink.stream.sink;
 
 import lombok.Builder;
 import lombok.Data;
