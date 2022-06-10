@@ -21,7 +21,7 @@
 
         <flink.version>1.14.3</flink.version>
         <hoodie.version>0.10.1</hoodie.version>
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.24</lombok.version>
         <skip.pmd.check>true</skip.pmd.check>
         <maven.plugin.version>3.8.1</maven.plugin.version>
         <maven.deploy.skip>false</maven.deploy.skip>
@@ -31,10 +31,16 @@
     <modules>
         <module>flink-cep</module>
         <module>flink-stream</module>
+        <module>flink-core</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.groud</groupId>
+                <artifactId>flink-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>io.groud</groupId>
                 <artifactId>flink-stream</artifactId>
@@ -59,83 +65,6 @@
                 <artifactId>scala-compiler</artifactId>
                 <version>${scala.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>${mysql.version}</version>
-            </dependency>
-
-            <!--flink-->
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-core</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-java</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-table</artifactId>
-                <version>${flink.version}</version>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-clients_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <!-- flink 运行时的 webUI -->
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-runtime-web_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-table-api-java</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-statebackend-rocksdb -->
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <!-- https://github.com/StarRocks/flink-connector-starrocks -->
-            <!--<dependency>
-                <groupId>com.starrocks</groupId>
-                <artifactId>flink-connector-starrocks</artifactId>
-                <version>1.1.13_flink-1.13_${scala.binary.version}</version>
-            </dependency>-->
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-cep_2.11</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -150,22 +79,22 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.36</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.17.1</version>
+            <version>2.17.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.17.1</version>
+            <version>2.17.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.17.1</version>
+            <version>2.17.2</version>
         </dependency>
     </dependencies>
 
@@ -202,38 +131,6 @@
                                           tofile="${session.executionRootDirectory}/target/${project.artifactId}.jar"
                                           file="${project.build.directory}/${project.artifactId}.jar"/>
                                 </tasks>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.2.3</version>
-                    <configuration>
-                        <filters>
-                            <filter>
-                                <artifact>*:*</artifact>
-                                <excludes>
-                                    <exclude>META-INF/*.SF</exclude>
-                                    <exclude>META-INF/*.DSA</exclude>
-                                    <exclude>META-INF/*.RSA</exclude>
-                                </excludes>
-                            </filter>
-                        </filters>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>shade</goal>
-                            </goals>
-                            <configuration>
-                                <!--<minimizeJar>true</minimizeJar>-->
-                                <transformers>
-                                    <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                </transformers>
                             </configuration>
                         </execution>
                     </executions>
@@ -309,65 +206,6 @@
                     </args>
                 </configuration>
             </plugin>
-            <!--<plugin>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        &lt;!&ndash; 绑定pmd:pmd到validate生命周期，在validate时会自动进行代码规范检查 &ndash;&gt;
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <configuration>
-                            &lt;!&ndash; 配置文件的路径，在style文件夹下 &ndash;&gt;
-                            <configLocation>script/style/checkstyle.xml</configLocation>
-                            <encoding>UTF-8</encoding>
-                            <consoleOutput>true</consoleOutput>
-                            <failsOnError>true</failsOnError>
-                            <includeTestSourceDirectory>false</includeTestSourceDirectory>
-                        </configuration>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.14.0</version>
-                <configuration>
-                    <rulesets>
-                        <ruleset>rulesets/java/ali-comment.xml</ruleset>
-                        <ruleset>rulesets/java/ali-concurrent.xml</ruleset>
-                        <ruleset>rulesets/java/ali-constant.xml</ruleset>
-                        <ruleset>rulesets/java/ali-exception.xml</ruleset>
-                        <ruleset>rulesets/java/ali-flowcontrol.xml</ruleset>
-                        <ruleset>rulesets/java/ali-naming.xml</ruleset>
-                        <ruleset>rulesets/java/ali-oop.xml</ruleset>
-                        <ruleset>rulesets/java/ali-orm.xml</ruleset>
-                        <ruleset>rulesets/java/ali-other.xml</ruleset>
-                        <ruleset>rulesets/java/ali-set.xml</ruleset>
-                    </rulesets>
-                    <printFailingErrors>true</printFailingErrors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    &lt;!&ndash; 需要使用阿里的一些xml文件，因此需要这里增加p3c的依赖 &ndash;&gt;
-                    <dependency>
-                        <groupId>com.alibaba.p3c</groupId>
-                        <artifactId>p3c-pmd</artifactId>
-                        <version>2.1.1</version>
-                    </dependency>
-                </dependencies>
-            </plugin>-->
         </plugins>
     </build>
 
