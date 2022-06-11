@@ -3,7 +3,6 @@ package io.group.flink.stream.cdc.mysql;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import io.group.flink.stream.sink.ChangelogSink;
-import io.group.flink.stream.sink.iceberg.IcebergCdcSink;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
@@ -15,7 +14,12 @@ import org.apache.flink.types.RowKind;
 
 /**
  * 测试 mysql-cdc 分流写入不同的 sink table。
- * 任务以 datastream 方式启动，方便新增表(https://ververica.github.io/flink-cdc-connectors/master/content/connectors/mysql-cdc.html#scan-newly-added-tables)
+ * 任务以 DataStream 方式启动，方便新增表(<a href="https://ververica.github.io/flink-cdc-connectors/master/content/connectors/mysql-cdc.html#scan-newly-added-tables">...</a>)
+ * <p>
+ * 该任务版本未调整，无法运行，请 cp 到个人项目中执行。
+ * <p>
+ * flink-cdc2.2.1 默认使用 flink1.13。如果项目为 flink1.14 版本，需要自己编译 flink-cdc 参考
+ * <a href="https://github.com/GourdErwa/flink-cdc-connectors-release-2.2.1_flink1.14#%E6%9C%AC%E5%9C%B0%E7%BC%96%E8%AF%91%E5%86%85%E5%AE%B9-">...</a>
  *
  * @author Li.Wei by 2022/5/19
  */
