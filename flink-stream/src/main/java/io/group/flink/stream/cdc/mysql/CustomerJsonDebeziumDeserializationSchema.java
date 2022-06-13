@@ -54,7 +54,7 @@ public class CustomerJsonDebeziumDeserializationSchema
         Schema valueSchema = sourceRecord.valueSchema();
         if (op != Envelope.Operation.CREATE && op != Envelope.Operation.READ) {
             if (op == Envelope.Operation.DELETE) {
-                this.emit(Tuple3.of(table, RowKind.DELETE, this.extractAfterRow(value, valueSchema)), out);
+                this.emit(Tuple3.of(table, RowKind.DELETE, this.extractBeforeRow(value, valueSchema)), out);
             } else {
                 this.emit(Tuple3.of(table, RowKind.UPDATE_BEFORE, this.extractBeforeRow(value, valueSchema)), out);
                 this.emit(Tuple3.of(table, RowKind.UPDATE_AFTER, this.extractAfterRow(value, valueSchema)), out);
