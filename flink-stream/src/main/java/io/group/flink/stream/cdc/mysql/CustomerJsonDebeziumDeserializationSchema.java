@@ -34,7 +34,7 @@ import static org.apache.flink.formats.common.TimeFormats.RFC3339_TIMESTAMP_FORM
  * (order,INSERT,{"user_id":7,"creat_time":1653381471000,"price":52,"goods_id":"cv_1246","pay_type":0,"id":3,"pay_time":1653381473000})
  * (order,INSERT,{"user_id":1,"creat_time":1653315501000,"price":52,"goods_id":"cv_1245","pay_type":1,"id":1,"pay_time":1653401906000})
  * </pre>
- *
+ * <p>
  * TODO 序列化时注意时间序列化方式。
  *
  * @author Li.Wei by 2022/5/17
@@ -81,9 +81,10 @@ public class CustomerJsonDebeziumDeserializationSchema
             if (o == null) {
                 continue;
             }
-            // 时间特殊处理
-            if (o instanceof Long) {
-                switch (field.schema().name()) {
+            // 时间特殊处理 , 自增长主键时 field.schema().name 可能为空
+            final String schemaName = field.schema().name();
+            if (o instanceof Long && schemaName != null) {
+                switch (schemaName) {
                     case Timestamp.SCHEMA_NAME:
                         o = TimestampData.fromEpochMillis((Long) o)
                             .toLocalDateTime().format(RFC3339_TIMESTAMP_FORMAT);
