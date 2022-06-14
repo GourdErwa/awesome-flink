@@ -2,15 +2,15 @@ package io.group.flink.stream.cdc.mysql;
 
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
+import io.group.flink.stream.cdc.schema.RowKindJsonDeserializationSchemaBase;
+import io.group.flink.stream.cdc.schema.RowKindJsonDeserializationSchemaV2;
 import io.group.flink.stream.sink.ChangelogSink;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.types.RowKind;
 
 /**
  * 测试 mysql-cdc 分流写入不同的 sink table。
@@ -32,7 +32,8 @@ public class MysqlCDC2ChangeLog {
         // 开启checkpoint
         env.enableCheckpointing(10000L, CheckpointingMode.EXACTLY_ONCE);
 
-        MySqlSource<Tuple3<String, RowKind, String>> mySqlSource = MySqlSource.<Tuple3<String, RowKind, String>>builder()
+        MySqlSource<RowKindJsonDeserializationSchemaBase.TableIRowKindJson> mySqlSource
+            = MySqlSource.<RowKindJsonDeserializationSchemaBase.TableIRowKindJson>builder()
             .hostname("10.0.59.xx")
             .port(3306)
             .scanNewlyAddedTableEnabled(true)
@@ -42,10 +43,11 @@ public class MysqlCDC2ChangeLog {
             .includeSchemaChanges(true)
             .username("root")
             .password("123456")
-            .deserializer(new CustomerJsonDebeziumDeserializationSchema())
+            // 更多扩展支持分流序列化器参考 io.group.flink.stream.cdc.schema 包内容
+            .deserializer(new RowKindJsonDeserializationSchemaV2())
             .build();
 
-        final DataStreamSource<Tuple3<String, RowKind, String>> source
+        final DataStreamSource<RowKindJsonDeserializationSchemaBase.TableIRowKindJson> source
             = env.fromSource(mySqlSource, WatermarkStrategy.noWatermarks(), "MySQL Source");
 
         // sink table

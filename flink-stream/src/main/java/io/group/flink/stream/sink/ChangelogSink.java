@@ -1,11 +1,11 @@
 package io.group.flink.stream.sink;
 
+import io.group.flink.stream.cdc.schema.RowKindJsonDeserializationSchemaBase;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.formats.json.JsonRowDeserializationSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -17,7 +17,6 @@ import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.catalog.ResolvedSchema;
 import org.apache.flink.table.types.utils.TypeConversions;
 import org.apache.flink.types.Row;
-import org.apache.flink.types.RowKind;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +38,7 @@ public class ChangelogSink {
         // TODO 必须该处初始化 tableSettingConfigs
     }
 
-    public void compute(DataStream<Tuple3<String, RowKind, String>> input, StreamTableEnvironment tableEnv) {
+    public void compute(DataStream<RowKindJsonDeserializationSchemaBase.TableIRowKindJson> input, StreamTableEnvironment tableEnv) {
 
         final StreamStatementSet statementSet = tableEnv.createStatementSet();
 
@@ -66,13 +65,14 @@ public class ChangelogSink {
 
             // 分流匹配对应的表
             final SingleOutputStreamOperator<Row> ds = input
-                .filter(value -> value.f0.equals(config.getSubscriptionTableName()))
+                .filter(value -> value.getTable().equals(config.getSubscriptionTableName()))
                 .map(value -> {
-                    final Row rowData = deserializationSchema.deserialize(value.f2.getBytes(StandardCharsets.UTF_8));
-                    rowData.setKind(value.f1);
+                    final Row rowData = deserializationSchema.deserialize(value.getJson().getBytes(StandardCharsets.UTF_8));
+                    rowData.setKind(value.getRowKind());
                     return rowData;
                 }, (TypeInformation<Row>) TypeConversions.fromDataTypeToLegacyInfo(sinkTableResolvedSchema.toPhysicalRowDataType()))
                 .name(String.format("Subscription[%s]", config.getSubscriptionTableName()));
+
 
             final Table table = tableEnv.fromChangelogStream(ds);
             table.printSchema();
