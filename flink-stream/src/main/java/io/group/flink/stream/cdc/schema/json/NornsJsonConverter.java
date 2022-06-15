@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.flink.formats.common.TimeFormats.RFC3339_TIMESTAMP_FORMAT;
 import static org.apache.flink.formats.common.TimeFormats.RFC3339_TIME_FORMAT;
@@ -93,32 +94,32 @@ public class NornsJsonConverter extends JsonConverter {
         LOGICAL_CONVERTERS.put(Timestamp.SCHEMA_NAME, (schema, value, config) -> {
             if (!(value instanceof Long))
                 throw new DataException("Invalid type for Long, expected Date but was " + value.getClass());
-            return JSON_NODE_FACTORY.textNode(
-                TimestampData.fromEpochMillis((Long) value)
-                    .toLocalDateTime().format(RFC3339_TIMESTAMP_FORMAT)
+            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis((Long) value)
+                .toLocalDateTime().format(RFC3339_TIMESTAMP_FORMAT)
             );
         });
         LOGICAL_CONVERTERS.put(MicroTime.SCHEMA_NAME, (schema, value, config) -> {
             if (!(value instanceof Long))
                 throw new DataException("Invalid type for Long, expected Date but was " + value.getClass());
-            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis(
-                ((Long) value) / 1000, 0).toLocalDateTime().toLocalTime().format(RFC3339_TIME_FORMAT));
+            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis(TimeUnit.MICROSECONDS.toMillis((long) value))
+                .toLocalDateTime().format(RFC3339_TIME_FORMAT));
         });
-
+        LOGICAL_CONVERTERS.put(NanoTime.SCHEMA_NAME, (schema, value, config) -> {
+            if (!(value instanceof Long))
+                throw new DataException("Invalid type for Long, expected Date but was " + value.getClass());
+            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis(TimeUnit.NANOSECONDS.toMillis((long) value))
+                .toLocalDateTime().format(RFC3339_TIME_FORMAT));
+        });
         LOGICAL_CONVERTERS.put(MicroTimestamp.SCHEMA_NAME, (schema, value, config) -> {
             if (!(value instanceof Long))
                 throw new DataException("Invalid type for Long, expected Date but was " + value.getClass());
-            long micro = (long) value;
-            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis(
-                    micro / 1000, (int) (micro % 1000 * 1000))
+            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis(TimeUnit.MICROSECONDS.toMillis((long) value))
                 .toLocalDateTime().format(RFC3339_TIMESTAMP_FORMAT));
         });
         LOGICAL_CONVERTERS.put(NanoTimestamp.SCHEMA_NAME, (schema, value, config) -> {
             if (!(value instanceof Long))
                 throw new DataException("Invalid type for Long, expected Date but was " + value.getClass());
-            long nano = (long) value;
-            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis(
-                    nano / 1000_000, (int) (nano % 1000_000))
+            return JSON_NODE_FACTORY.textNode(TimestampData.fromEpochMillis(TimeUnit.NANOSECONDS.toMillis((long) value))
                 .toLocalDateTime().format(RFC3339_TIMESTAMP_FORMAT));
         });
     }
