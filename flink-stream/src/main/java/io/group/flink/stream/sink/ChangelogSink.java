@@ -35,7 +35,25 @@ public class ChangelogSink {
     private final List<TableSettingConfig> tableSettingConfigs = Lists.newArrayList();
 
     {
-        // TODO 必须该处初始化 tableSettingConfigs
+        // 初始化示例
+        tableSettingConfigs.add(TableSettingConfig.builder()
+            .tableIdentifier("demo")
+            .subscriptionTableName("demo")
+            .createTableSql("CREATE TABLE demo (\n" +
+                "  `user_id` BIGINT,\n" +
+                "  `item_id` BIGINT,\n" +
+                "  `behavior` STRING,\n" +
+                "  `ts` TIMESTAMP(3) METADATA FROM 'timestamp'\n" +
+                ") WITH (\n" +
+                "  'connector' = 'kafka',\n" +
+                "  'topic' = 'user_behavior',\n" +
+                "  'properties.bootstrap.servers' = 'localhost:9092',\n" +
+                "  'properties.group.id' = 'testGroup',\n" +
+                "  'scan.startup.mode' = 'earliest-offset',\n" +
+                "  'format' = 'csv'\n" +
+                ")")
+            .build());
+        // TODO 该处根据实际 sink 目标表，初始化 tableSettingConfigs 变量
     }
 
     public void compute(DataStream<RowKindJsonDeserializationSchemaBase.TableIRowKindJson> input, StreamTableEnvironment tableEnv) {
