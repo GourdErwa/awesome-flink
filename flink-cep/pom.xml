@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cep_2.11</artifactId>
+            <artifactId>flink-cep</artifactId>
             <version>${flink.version}</version>
         </dependency>
     </dependencies>

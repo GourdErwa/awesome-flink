@@ -13,14 +13,12 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>1.8</java.version>
-        <scala.version>2.12.10</scala.version>
-        <scala.binary.version>2.12</scala.binary.version>
+        <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <flink.version>1.14.3</flink.version>
-        <hoodie.version>0.10.1</hoodie.version>
+        <flink.version>1.16.1</flink.version>
+        <hoodie.version>0.13.0</hoodie.version>
         <lombok.version>1.18.24</lombok.version>
         <skip.pmd.check>true</skip.pmd.check>
         <maven.plugin.version>3.8.1</maven.plugin.version>
@@ -47,24 +45,6 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- scala -->
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-library</artifactId>
-                <version>${scala.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-reflect</artifactId>
-                <version>${scala.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-compiler</artifactId>
-                <version>${scala.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -166,46 +146,6 @@
                 </configuration>
             </plugin>
 
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>4.4.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>scala-compile-first</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>scala-test-compile</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
-                <configuration>
-                    <scalaVersion>${scala.version}</scalaVersion>
-                    <jvmArgs>
-                        <jvmArg>-Xms64m</jvmArg>
-                        <jvmArg>-Xmx1024m</jvmArg>
-                    </jvmArgs>
-                    <args>
-                        <arg>-unchecked</arg>
-                        <arg>-deprecation</arg>
-                        <arg>-explaintypes</arg>
-                    </args>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 

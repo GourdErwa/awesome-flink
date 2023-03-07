@@ -1,10 +1,10 @@
 package io.group.flink.stream.sink.iceberg;
 
+import com.google.common.base.Splitter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.formats.common.TimestampFormat;
 import org.apache.flink.formats.json.JsonRowDataDeserializationSchema;
-import org.apache.flink.shaded.guava18.com.google.common.base.Splitter;
 import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.iceberg.Table;
@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.apache.iceberg.CatalogProperties.CACHE_ENABLED;
 import static org.apache.iceberg.flink.FlinkCatalogFactory.*;
 
 /**
@@ -102,6 +103,6 @@ public class CatalogUtil {
             baseNamespace = Namespace.of(properties.get(BASE_NAMESPACE).split("\\."));
         }
         boolean cacheEnabled = Boolean.parseBoolean(properties.getOrDefault(CACHE_ENABLED, "true"));
-        return new FlinkCatalog(catalogName, defaultDatabase, baseNamespace, catalogLoader, cacheEnabled);
+        return new FlinkCatalog(catalogName, defaultDatabase, baseNamespace, catalogLoader, cacheEnabled, 1000L);
     }
 }
