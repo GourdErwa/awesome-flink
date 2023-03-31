@@ -12,6 +12,7 @@ import org.apache.flink.cep.PatternStream;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.cep.pattern.conditions.SimpleCondition;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -30,21 +31,20 @@ import java.time.Duration;
 public class EventCep {
 
     public static void main(String[] args) throws Exception {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment
-            .createLocalEnvironmentWithWebUI(new Configuration());
+        final Configuration conf = new Configuration();
+        conf.setString(RestOptions.BIND_PORT, "8081-8089");
+        try (StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(conf)) {
+            final KeyedStream<Event, String> source = env.addSource(new EventSource())
+                .assignTimestampsAndWatermarks(WatermarkStrategy
+                    .<Event>forBoundedOutOfOrderness(Duration.ofSeconds(10))
+                    .withIdleness(Duration.ofSeconds(10))
+                    .withTimestampAssigner((event, timestamp) -> event.getSecond())
+                ).name("事件流")
+                .keyBy((KeySelector<Event, String>) Event::getUserId);
 
-        final KeyedStream<Event, String> source = env.addSource(new EventSource())
-            .assignTimestampsAndWatermarks(WatermarkStrategy
-                .<Event>forBoundedOutOfOrderness(Duration.ofSeconds(10))
-                .withIdleness(Duration.ofSeconds(10))
-                .withTimestampAssigner((event, timestamp) -> event.getSecond())
-            ).name("事件流")
-            .keyBy((KeySelector<Event, String>) event1 -> event1.getUserId());
-
-
-        registerPattern1(source);
-        //registerPattern2(source);
-        //registerPattern3(source);
+            registerPattern1(source);
+            //registerPattern2(source);
+            //registerPattern3(source);
 
 //        new Thread(new Runnable() {
 //            @Override
@@ -58,8 +58,8 @@ public class EventCep {
 //                registerPattern3(source);
 //            }
 //        }).start();
-        env.execute(EventCep.class.getSimpleName());
-
+            env.execute(EventCep.class.getSimpleName());
+        }
     }
 
     private static void registerPattern1(DataStream<Event> dataStream) {

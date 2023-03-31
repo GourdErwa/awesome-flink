@@ -21,6 +21,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
  * flink-cdc2.2.1 默认使用 flink1.13。如果项目为 flink1.14 版本，需要自己编译 flink-cdc 参考
  * <a href="https://github.com/GourdErwa/flink-cdc-connectors-release-2.2.1_flink1.14#%E6%9C%AC%E5%9C%B0%E7%BC%96%E8%AF%91%E5%86%85%E5%AE%B9-">...</a>
  *
+ * <p>flink-cdc2.3.0&flink1.16 版本已经解决以上适配问题
  * @author Li.Wei by 2022/5/19
  */
 public class MysqlCDC2ChangeLog {

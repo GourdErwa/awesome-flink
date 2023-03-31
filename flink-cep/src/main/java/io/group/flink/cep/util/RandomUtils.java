@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.util.Random;
 
 /**
- * https://gitee.com/tang006/mock/blob/master/src/main/java/com/mock/mocker/EnumMocker.java
+ * <a href="https://gitee.com/tang006/mock/blob/master/src/main/java/com/mock/mocker/EnumMocker.java">文档</a>
  *
  * @author Li.Wei by 2021/12/24
  */
